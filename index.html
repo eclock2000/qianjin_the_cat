@@ -217,22 +217,6 @@
     letter-spacing: 0.02em;
   }
 
-  /* 桌面 PiP 按钮 */
-  .pip-button {
-    margin-top: 16px;
-    display: none;
-    background: none;
-    border: 1px solid rgba(201,138,147,0.4);
-    color: var(--rose-deep);
-    padding: 8px 18px;
-    border-radius: 100px;
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  .pip-button:hover { background: rgba(201,138,147,0.1); }
-
   /* ===== 微信/内置浏览器引导遮罩 ===== */
   .wx-overlay {
     position: fixed; inset: 0;
@@ -297,7 +281,7 @@
     .dots { margin-bottom: 24px; }
   }
   @media (min-width: 900px) {
-    .pip-button { display: inline-block; }
+    .nav-arrow { width: 46px; height: 46px; }
   }
 </style>
 </head>
@@ -327,7 +311,7 @@
 
   <div class="ar-cta fade-up d4">
     <a id="arLink" rel="ar" href="assets/models/cat1.usdz" class="ar-button">
-      <img class="req" alt="" />
+      <img class="req" id="arThumb" src="assets/photos/cat1.png" alt="" />
       <span class="ar-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 2l8.5 4.9v9.8L12 21.6 3.5 16.7V6.9L12 2z"/>
@@ -338,7 +322,6 @@
       <span id="arText">进入 AR</span>
     </a>
     <div class="ar-sub" id="arSub">把它放进你的房间看看 ✦</div>
-    <button class="pip-button" id="pipBtn">让它待在桌面上 ⌂</button>
   </div>
 </div>
 
@@ -396,6 +379,7 @@
       photo.src = c.photo;
       caption.textContent = c.cap;
       arLink.setAttribute('href', c.model);
+      document.getElementById('arThumb').src = c.photo;
       polaroid.classList.remove('swapping');
     }, 200);
     dots.forEach((d, i) => d.classList.toggle('on', i === idx));
@@ -443,64 +427,6 @@
       arText.textContent = '看看这只猫';
       arSub.textContent = 'AR 实景功能需要用 iPhone 打开哦 ✦';
     }
-  }
-
-  // ===== 桌面：画中画桌宠（把照片做成浮动小窗）=====
-  const pipBtn = document.getElementById('pipBtn');
-  const supportsPiP = ('pictureInPictureEnabled' in document) && document.pictureInPictureEnabled;
-  if (!supportsPiP) {
-    pipBtn.style.display = 'none';
-  } else {
-    pipBtn.addEventListener('click', async () => {
-      try {
-        const v = await buildPiPVideo(cats[idx].photo);
-        await v.play();
-        await v.requestPictureInPicture();
-      } catch (err) {
-        pipBtn.textContent = '这个浏览器不支持小窗 ◞‸◟';
-      }
-    });
-  }
-
-  // 把一张照片画进 canvas → 流 → video，用于 PiP
-  async function buildPiPVideo(src) {
-    const img = await loadImg(src);
-    const cv = document.createElement('canvas');
-    cv.width = 360; cv.height = 480;
-    const ctx = cv.getContext('2d');
-    let t = 0;
-    function draw() {
-      t += 0.03;
-      ctx.fillStyle = '#f7e9ec';
-      ctx.fillRect(0, 0, cv.width, cv.height);
-      // 轻微上下浮动，像呼吸
-      const bob = Math.sin(t) * 6;
-      const iw = cv.width * 0.86, ih = iw * (img.height / img.width);
-      ctx.drawImage(img, (cv.width - iw) / 2, (cv.height - ih) / 2 + bob, iw, ih);
-      requestAnimationFrame(draw);
-    }
-    draw();
-    const stream = cv.captureStream(30);
-    let v = document.getElementById('pipVideo');
-    if (!v) {
-      v = document.createElement('video');
-      v.id = 'pipVideo';
-      v.muted = true; v.playsInline = true;
-      v.style.position = 'fixed'; v.style.opacity = '0'; v.style.pointerEvents = 'none';
-      v.style.width = '1px'; v.style.height = '1px';
-      document.body.appendChild(v);
-    }
-    v.srcObject = stream;
-    return v;
-  }
-  function loadImg(src) {
-    return new Promise((res, rej) => {
-      const i = new Image();
-      i.crossOrigin = 'anonymous';
-      i.onload = () => res(i);
-      i.onerror = rej;
-      i.src = src;
-    });
   }
 })();
 </script>
