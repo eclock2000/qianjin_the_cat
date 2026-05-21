@@ -310,7 +310,7 @@
   <div class="dots fade-up d3" id="dots"></div>
 
   <div class="ar-cta fade-up d4">
-    <a id="arLink" rel="ar" href="assets/models/cat1.usdz" class="ar-button">
+    <a id="arLink" rel="ar" href="assets/models/cat1.usdz#allowsContentScaling=0" class="ar-button">
       <img class="req" id="arThumb" src="assets/photos/cat1.png" alt="" />
       <span class="ar-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
@@ -378,7 +378,7 @@
     setTimeout(() => {
       photo.src = c.photo;
       caption.textContent = c.cap;
-      arLink.setAttribute('href', c.model);
+      arLink.setAttribute('href', c.model + '#allowsContentScaling=0');
       document.getElementById('arThumb').src = c.photo;
       polaroid.classList.remove('swapping');
     }, 200);
