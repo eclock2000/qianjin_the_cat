@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#f7e9ec" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>· ੭ ·</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg:        #f7e9ec;   /* 裸粉底 */
+    --bg-soft:   #fbf2f3;
+    --rose:      #c98a93;   /* 玫瑰褐点缀 */
+    --rose-deep: #9d6670;
+    --ink:       #5a4750;   /* 文字色，温柔的深可可 */
+    --ink-soft:  #998088;
+    --paper:     #fffdfc;   /* 拍立得相纸白 */
+    --shadow:    rgba(126, 90, 100, 0.18);
+    --shadow-soft: rgba(126, 90, 100, 0.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    color: var(--ink);
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* 柔光氛围背景 */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 30% 20%, rgba(255,255,255,0.6) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 80% 90%, rgba(201,138,147,0.18) 0%, transparent 55%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  /* 极淡颗粒 */
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/><feColorMatrix values='0 0 0 0 0.6 0 0 0 0 0.4 0 0 0 0 0.45 0 0 0 0.04 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    pointer-events: none;
+    z-index: 1;
+    mix-blend-mode: multiply;
+  }
+
+  .stage {
+    position: relative;
+    z-index: 5;
+    height: 100%;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: env(safe-area-inset-top) 20px env(safe-area-inset-bottom);
+  }
+
+  /* 顶部小装饰字 */
+  .top-mark {
+    position: absolute;
+    top: max(28px, env(safe-area-inset-top));
+    left: 0; right: 0;
+    text-align: center;
+    font-family: 'Gaegu', cursive;
+    font-size: 15px;
+    letter-spacing: 0.4em;
+    color: var(--rose);
+    opacity: 0.7;
+    z-index: 6;
+  }
+
+  /* 拍立得 + 照片轮播 */
+  .carousel {
+    position: relative;
+    width: 100%;
+    max-width: 340px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 36px;
+  }
+
+  .polaroid {
+    background: var(--paper);
+    padding: 14px 14px 50px;
+    box-shadow:
+      0 1px 1px var(--shadow-soft),
+      0 10px 30px var(--shadow),
+      0 30px 50px -20px var(--shadow);
+    border-radius: 3px;
+    width: 270px;
+    position: relative;
+    transition: transform 0.5s cubic-bezier(.22,1,.36,1), opacity 0.5s;
+    transform: rotate(-1.6deg);
+  }
+  .polaroid .photo-frame {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+    background: #efe6e8;
+    border-radius: 1px;
+    position: relative;
+  }
+  .polaroid img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: opacity 0.45s ease;
+  }
+  .polaroid .caption {
+    position: absolute;
+    bottom: 16px;
+    left: 0; right: 0;
+    text-align: center;
+    font-family: 'Gaegu', cursive;
+    font-size: 19px;
+    color: var(--rose-deep);
+    transition: opacity 0.4s;
+  }
+  .polaroid .caption .dot {
+    color: var(--rose);
+    opacity: 0.5;
+    margin: 0 6px;
+  }
+
+  /* 切换时的微妙动画态 */
+  .polaroid.swapping { transform: rotate(-1.6deg) scale(0.97); opacity: 0.6; }
+
+  /* 左右箭头 */
+  .nav-arrow {
+    position: absolute;
+    top: 45%;
+    transform: translateY(-50%);
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    background: rgba(255, 253, 252, 0.8);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(201,138,147,0.3);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    box-shadow: 0 4px 14px var(--shadow-soft);
+    transition: transform 0.2s, background 0.2s;
+    color: var(--rose-deep);
+  }
+  .nav-arrow:active { transform: translateY(-50%) scale(0.88); background: var(--bg-soft); }
+  .nav-arrow.prev { left: -6px; }
+  .nav-arrow.next { right: -6px; }
+  .nav-arrow svg { width: 18px; height: 18px; }
+
+  /* 小圆点指示器 */
+  .dots {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 34px;
+    z-index: 6;
+  }
+  .dots .d {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--rose);
+    opacity: 0.28;
+    transition: opacity 0.3s, transform 0.3s;
+  }
+  .dots .d.on { opacity: 0.9; transform: scale(1.25); }
+
+  /* AR 胶囊按钮 */
+  .ar-cta {
+    position: relative;
+    z-index: 6;
+  }
+  .ar-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 11px;
+    padding: 15px 34px;
+    background: linear-gradient(135deg, var(--rose) 0%, var(--rose-deep) 100%);
+    color: #fff;
+    border: none;
+    border-radius: 100px;
+    font-family: 'Gaegu', cursive;
+    font-size: 21px;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    text-decoration: none;
+    box-shadow: 0 8px 22px rgba(157, 102, 112, 0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+    transition: transform 0.2s cubic-bezier(.22,1,.36,1), box-shadow 0.2s;
+    position: relative;
+  }
+  .ar-button:active {
+    transform: scale(0.96) translateY(1px);
+    box-shadow: 0 4px 12px rgba(157, 102, 112, 0.35);
+  }
+  .ar-button img.req { width:0; height:0; position:absolute; left:0; top:0; pointer-events:none; opacity:0; }
+  .ar-button .ar-icon { width: 22px; height: 22px; flex-shrink: 0; }
+  .ar-button .ar-icon svg { width: 100%; height: 100%; }
+
+  .ar-sub {
+    margin-top: 13px;
+    text-align: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 14px;
+    color: var(--ink-soft);
+    letter-spacing: 0.02em;
+  }
+
+  /* 桌面 PiP 按钮 */
+  .pip-button {
+    margin-top: 16px;
+    display: none;
+    background: none;
+    border: 1px solid rgba(201,138,147,0.4);
+    color: var(--rose-deep);
+    padding: 8px 18px;
+    border-radius: 100px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .pip-button:hover { background: rgba(201,138,147,0.1); }
+
+  /* ===== 微信/内置浏览器引导遮罩 ===== */
+  .wx-overlay {
+    position: fixed; inset: 0;
+    z-index: 100;
+    background: rgba(60, 40, 48, 0.92);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: none;
+    flex-direction: column;
+    align-items: flex-end;
+    padding: 20px 24px;
+    color: #fff;
+  }
+  .wx-overlay.show { display: flex; }
+  .wx-arrow {
+    width: 70px; height: 70px;
+    margin: 8px 14px 0 0;
+    animation: bob 1.4s ease-in-out infinite;
+  }
+  @keyframes bob {
+    0%,100% { transform: translateY(0); }
+    50%     { transform: translateY(-10px); }
+  }
+  .wx-text {
+    width: 100%;
+    text-align: center;
+    margin-top: 32px;
+  }
+  .wx-text .big {
+    font-family: 'Gaegu', cursive;
+    font-size: 27px;
+    line-height: 1.5;
+    margin-bottom: 18px;
+  }
+  .wx-text .big .hl {
+    color: #f4b8c2;
+    border-bottom: 2px dashed #f4b8c2;
+    padding-bottom: 2px;
+  }
+  .wx-step {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px;
+    line-height: 1.9;
+    color: rgba(255,255,255,0.85);
+    max-width: 300px;
+    margin: 0 auto;
+  }
+  .wx-step b { color: #fff; font-weight: 600; }
+  .wx-emoji { font-size: 40px; margin: 20px 0 10px; }
+
+  /* 入场动画 */
+  .fade-up { opacity: 0; transform: translateY(16px); animation: fadeUp 0.9s cubic-bezier(.22,1,.36,1) forwards; }
+  .d1 { animation-delay: 0.1s; }
+  .d2 { animation-delay: 0.28s; }
+  .d3 { animation-delay: 0.46s; }
+  .d4 { animation-delay: 0.62s; }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+  @media (max-height: 700px) {
+    .polaroid { width: 230px; padding: 12px 12px 44px; }
+    .carousel { margin-bottom: 24px; }
+    .dots { margin-bottom: 24px; }
+  }
+  @media (min-width: 900px) {
+    .pip-button { display: inline-block; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="top-mark fade-up d1">˚ · ✦ 给你的小礼物 ✦ · ˚</div>
+
+  <div class="carousel fade-up d2">
+    <div class="nav-arrow prev" id="prevBtn" aria-label="上一张">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </div>
+
+    <div class="polaroid" id="polaroid">
+      <div class="photo-frame">
+        <img id="photo" src="assets/photos/cat1.png" alt="" />
+      </div>
+      <div class="caption" id="caption">· ♡ ·</div>
+    </div>
+
+    <div class="nav-arrow next" id="nextBtn" aria-label="下一张">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </div>
+  </div>
+
+  <div class="dots fade-up d3" id="dots"></div>
+
+  <div class="ar-cta fade-up d4">
+    <a id="arLink" rel="ar" href="assets/models/cat1.usdz" class="ar-button">
+      <img class="req" alt="" />
+      <span class="ar-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2l8.5 4.9v9.8L12 21.6 3.5 16.7V6.9L12 2z"/>
+          <path d="M3.7 7l8.3 4.8L20.3 7"/>
+          <path d="M12 21.6V11.8"/>
+        </svg>
+      </span>
+      <span id="arText">进入 AR</span>
+    </a>
+    <div class="ar-sub" id="arSub">把它放进你的房间看看 ✦</div>
+    <button class="pip-button" id="pipBtn">让它待在桌面上 ⌂</button>
+  </div>
+</div>
+
+<!-- 微信/内置浏览器引导 -->
+<div class="wx-overlay" id="wxOverlay">
+  <svg class="wx-arrow" viewBox="0 0 80 80" fill="none">
+    <path d="M40 60 L40 20 M40 20 L26 34 M40 20 L54 34" stroke="#f4b8c2" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="62" cy="14" r="3" fill="#f4b8c2"/>
+    <circle cx="70" cy="14" r="3" fill="#f4b8c2"/>
+    <circle cx="54" cy="14" r="3" fill="#f4b8c2"/>
+  </svg>
+  <div class="wx-text">
+    <div class="big">点右上角 <span class="hl">· · ·</span><br>用浏览器打开 ୨୧</div>
+    <div class="wx-emoji">🐱</div>
+    <div class="wx-step">
+      微信里看不了 AR 哦～<br>
+      点右上角 <b>···</b> → 选 <b>「在 Safari 中打开」</b><br>
+      就能把猫咪放进你的房间啦
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // ===== 数据 =====
+  const cats = [
+    { photo: 'assets/photos/cat1.png', model: 'assets/models/cat1.usdz', cap: '· 蕾丝领结 ·' },
+    { photo: 'assets/photos/cat2.png', model: 'assets/models/cat2.usdz', cap: '· 粉粉的一天 ·' },
+    { photo: 'assets/photos/cat3.png', model: 'assets/models/cat3.usdz', cap: '· 今日份慵懒 ·' },
+  ];
+  let idx = 0;
+
+  const photo   = document.getElementById('photo');
+  const caption = document.getElementById('caption');
+  const arLink  = document.getElementById('arLink');
+  const polaroid= document.getElementById('polaroid');
+  const dotsBox = document.getElementById('dots');
+
+  // 预加载照片，切换不闪
+  cats.forEach(c => { const i = new Image(); i.src = c.photo; });
+
+  // 圆点
+  cats.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'd' + (i === 0 ? ' on' : '');
+    dotsBox.appendChild(d);
+  });
+  const dots = [...dotsBox.children];
+
+  function render(newIdx, dir) {
+    idx = (newIdx + cats.length) % cats.length;
+    const c = cats[idx];
+    polaroid.classList.add('swapping');
+    setTimeout(() => {
+      photo.src = c.photo;
+      caption.textContent = c.cap;
+      arLink.setAttribute('href', c.model);
+      polaroid.classList.remove('swapping');
+    }, 200);
+    dots.forEach((d, i) => d.classList.toggle('on', i === idx));
+  }
+
+  document.getElementById('prevBtn').addEventListener('click', () => render(idx - 1, -1));
+  document.getElementById('nextBtn').addEventListener('click', () => render(idx + 1, 1));
+
+  // 触摸滑动
+  let sx = 0;
+  const cEl = document.querySelector('.carousel');
+  cEl.addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, { passive: true });
+  cEl.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - sx;
+    if (Math.abs(dx) > 45) render(idx + (dx < 0 ? 1 : -1), dx < 0 ? 1 : -1);
+  }, { passive: true });
+
+  // 初始化首张 caption
+  caption.textContent = cats[0].cap;
+
+  // ===== 微信 / 内置浏览器检测 =====
+  const ua = navigator.userAgent.toLowerCase();
+  const inWeChat = /micromessenger/.test(ua);
+  const inQQ     = /\bqq\//.test(ua) || /qqbrowser/.test(ua);
+  const inWeibo  = /weibo/.test(ua);
+  const inApp    = inWeChat || inQQ || inWeibo;
+  const isIOS    = /iphone|ipad|ipod/.test(ua);
+
+  if (inApp) {
+    document.getElementById('wxOverlay').classList.add('show');
+  }
+
+  // ===== AR 支持检测：不支持就把按钮文案改柔和提示 =====
+  const arText = document.getElementById('arText');
+  const arSub  = document.getElementById('arSub');
+  const a = document.createElement('a');
+  const arSupported = a.relList && a.relList.supports && a.relList.supports('ar');
+
+  if (!inApp && !arSupported) {
+    if (isIOS) {
+      // iOS 但不支持（少见）
+      arSub.textContent = '在 Safari 里打开就能放进房间啦 ✦';
+    } else {
+      // 非 iOS（安卓 / 桌面）：AR Quick Look 不可用
+      arText.textContent = '看看这只猫';
+      arSub.textContent = 'AR 实景功能需要用 iPhone 打开哦 ✦';
+    }
+  }
+
+  // ===== 桌面：画中画桌宠（把照片做成浮动小窗）=====
+  const pipBtn = document.getElementById('pipBtn');
+  const supportsPiP = ('pictureInPictureEnabled' in document) && document.pictureInPictureEnabled;
+  if (!supportsPiP) {
+    pipBtn.style.display = 'none';
+  } else {
+    pipBtn.addEventListener('click', async () => {
+      try {
+        const v = await buildPiPVideo(cats[idx].photo);
+        await v.play();
+        await v.requestPictureInPicture();
+      } catch (err) {
+        pipBtn.textContent = '这个浏览器不支持小窗 ◞‸◟';
+      }
+    });
+  }
+
+  // 把一张照片画进 canvas → 流 → video，用于 PiP
+  async function buildPiPVideo(src) {
+    const img = await loadImg(src);
+    const cv = document.createElement('canvas');
+    cv.width = 360; cv.height = 480;
+    const ctx = cv.getContext('2d');
+    let t = 0;
+    function draw() {
+      t += 0.03;
+      ctx.fillStyle = '#f7e9ec';
+      ctx.fillRect(0, 0, cv.width, cv.height);
+      // 轻微上下浮动，像呼吸
+      const bob = Math.sin(t) * 6;
+      const iw = cv.width * 0.86, ih = iw * (img.height / img.width);
+      ctx.drawImage(img, (cv.width - iw) / 2, (cv.height - ih) / 2 + bob, iw, ih);
+      requestAnimationFrame(draw);
+    }
+    draw();
+    const stream = cv.captureStream(30);
+    let v = document.getElementById('pipVideo');
+    if (!v) {
+      v = document.createElement('video');
+      v.id = 'pipVideo';
+      v.muted = true; v.playsInline = true;
+      v.style.position = 'fixed'; v.style.opacity = '0'; v.style.pointerEvents = 'none';
+      v.style.width = '1px'; v.style.height = '1px';
+      document.body.appendChild(v);
+    }
+    v.srcObject = stream;
+    return v;
+  }
+  function loadImg(src) {
+    return new Promise((res, rej) => {
+      const i = new Image();
+      i.crossOrigin = 'anonymous';
+      i.onload = () => res(i);
+      i.onerror = rej;
+      i.src = src;
+    });
+  }
+})();
+</script>
+
+</body>
+</html>
